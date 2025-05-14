@@ -30,8 +30,8 @@ export default function NftPreview({ metadata }: NftPreviewProps) {
       <h2 className="text-2xl font-bold">NFT Preview</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="overflow-hidden">
-          <div className="aspect-square bg-muted relative">
+        <Card className="overflow-hidden border border-[hsl(240_4%_16%)]">
+          <div className="aspect-square bg-[hsl(240_4%_16%)]  relative">
             {imagePreview ? (
               <img
                 src={imagePreview || "/placeholder.svg"}
@@ -44,7 +44,7 @@ export default function NftPreview({ metadata }: NftPreviewProps) {
           </div>
         </Card>
 
-        <div className="space-y-4">
+        <div className="space-y-4 border border-white/50 rounded-lg pt-2">
           <div>
             <h3 className="text-xl font-bold">{metadata.name || "Untitled NFT"}</h3>
             <Badge variant="outline" className="mt-1">

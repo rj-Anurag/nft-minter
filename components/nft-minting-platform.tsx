@@ -165,10 +165,10 @@ export default function NftMintingPlatform() {
           <span className="font-medium">Environment:</span>
           <Tabs value={environment} onValueChange={setEnvironment as (value: string) => void} className="w-[400px]">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="devnet" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black">
+              <TabsTrigger value="devnet" className="data-[state=active]:bg-white data-[state=active]:text-black">
                 Devnet (Testing)
               </TabsTrigger>
-              <TabsTrigger value="mainnet" className="data-[state=active]:bg-purple-600">
+              <TabsTrigger value="mainnet" className="data-[state=active]:bg-stone-50 data-[state=active]:text-black">
                 Mainnet (Production)
               </TabsTrigger>
             </TabsList>
@@ -176,17 +176,16 @@ export default function NftMintingPlatform() {
         </div>
         <div className="flex items-center gap-4">
           {connected && walletBalance !== null && (
-            <div className="flex items-center gap-2 bg-muted px-3 py-1 rounded-md">
+            <div className="flex items-center gap-2 bg-[hsl(240_4%_16%)] px-3 py-1 rounded-md">
               <Wallet className="h-4 w-4" />
               <span>{walletBalance.toFixed(4)} SOL</span>
             </div>
           )}
-          <WalletMultiButton className="bg-black hover:bg-white" />
+          <WalletMultiButton   />
         </div>
       </div>
 
-      <Alert className="mb-6 border-blue-500 bg-blue-500/10 ">
-        <Info className="h-4 w-4 text-blue-500" />
+      <Alert className="mb-6 border bg-[hsl(240_4%_16%)] ">
         <AlertTitle>Demo Mode</AlertTitle>
         <AlertDescription>
           This is running in demo mode with mock storage and gallery. In a production environment, you would use
@@ -195,8 +194,7 @@ export default function NftMintingPlatform() {
       </Alert>
 
       {environment === "devnet" && (
-        <Alert className="mb-6 border-yellow-500 bg-yellow-500/20">
-          <Info className="h-4 w-4 text-yellow-500" />
+        <Alert className="mb-6 border bg-zinc-50 text-black">
           <AlertTitle>Devnet SOL Required</AlertTitle>
           <AlertDescription>
             You need Devnet SOL to mint NFTs. Get free Devnet SOL from{" "}
@@ -204,7 +202,7 @@ export default function NftMintingPlatform() {
               href="https://solfaucet.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-yellow-600 underline"
+              className="underline"
             >
               solfaucet.com
             </a>
@@ -213,18 +211,17 @@ export default function NftMintingPlatform() {
       )}
 
       {environment === "mainnet" && (
-        <Alert className="mb-6 border-yellow-500 bg-yellow-500/20">
-          <AlertCircle className="h-4 w-4 text-yellow-500" />
+        <Alert className="mb-6 border bg-zinc-50 text-black">
           <AlertTitle>Mainnet Mode Active</AlertTitle>
           <AlertDescription>You are using Mainnet. Real SOL will be used for transactions.</AlertDescription>
         </Alert>
       )}
 
       {mintedNft ? (
-        <Card className="mb-8">
+        <Card className="mb-8 bg-[hsl(240_4%_16%)]">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center text-center">
-              <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
+              <CheckCircle2 className="h-16 w-16 text-purple-200 mb-4" />
               <h2 className="text-2xl font-bold mb-2">NFT Minted Successfully!</h2>
               <p className="mb-4 text-muted-foreground">Your NFT has been minted on the {environment} network.</p>
 
@@ -234,15 +231,8 @@ export default function NftMintingPlatform() {
                   <span>{nftMetadata.name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium">Mint Address:</span>
-                  <a
-                    href={`https://explorer.solana.com/address/${mintedNft.mint.toString()}?cluster=${environment}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-purple-500 hover:underline truncate max-w-[250px]"
-                  >
-                    {mintedNft.mint.toString()}
-                  </a>
+                  <span className="font-medium">Mint Description:</span>
+                  <span>{nftMetadata.description}</span>
                 </div>
               </div>
 
@@ -252,22 +242,22 @@ export default function NftMintingPlatform() {
         </Card>
       ) : (
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 bg-[hsl(240_4%_16%)]">
             {!connected ? (
               <div className="flex flex-col items-center py-12">
                 <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
                 <p className="text-muted-foreground mb-6">Connect your Solana wallet to start minting NFTs</p>
-                <WalletMultiButton className="!bg-purple-600 hover:!bg-purple-700" />
+                <WalletMultiButton />
               </div>
             ) : previewMode ? (
               <div className="space-y-6">
                 <NftPreview metadata={nftMetadata} />
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-end">
-                  <Button variant="outline" onClick={handleEditMetadata} disabled={isMinting}>
+                  <Button className="bg-white" onClick={handleEditMetadata} disabled={isMinting}>
                     Edit Metadata
                   </Button>
-                  <Button onClick={handleMint} disabled={isMinting} className="bg-purple-600 hover:bg-purple-700">
+                  <Button onClick={handleMint} disabled={isMinting} className="bg-purple-300 hover:bg-purple-400">
                     {isMinting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -309,7 +299,7 @@ export default function NftMintingPlatform() {
       )}
 
       <div className="mt-12">
-        <h2 className="text-2xl font-bold mb-6">Your NFT Gallery</h2>
+        <h2 className="text-2xl font-bold mb-6 ">Your NFT Gallery</h2>
         <NftGallery />
       </div>
     </div>

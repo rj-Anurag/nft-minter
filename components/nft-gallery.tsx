@@ -84,7 +84,7 @@ export default function NftGallery() {
   if (!connected) {
     return (
       <Card>
-        <CardContent className="p-6 text-center">
+        <CardContent className="p-6 text-center bg-[hsl(240_4%_16%)]">
           <p className="text-muted-foreground">Connect your wallet to view your NFTs</p>
         </CardContent>
       </Card>
@@ -107,38 +107,38 @@ export default function NftGallery() {
   if (nfts.length === 0) {
     return (
       <Card>
-        <CardContent className="p-6 text-center">
-          <p className="text-muted-foreground">No NFTs found. Mint your first NFT to see it in the gallery!</p>
+        <CardContent className="p-6 text-center bg-[hsl(240_4%_16%)]">
+          <p className="text-white">No NFTs found. Mint your first NFT to see it in the gallery!</p>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       
       {nfts.length === 0 ? (
         <p>No NFTs found in your wallet.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ">
           {nfts.map((nft, index) => {
             const mintAddress = getMintAddress(nft)
             console.log(`NFT ${index} mint address:`, mintAddress) // Debug log for each NFT
             return (
-              <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div key={index} className=" rounded-lg shadow-md overflow-hidden">
                 <img
                   src={nft.image}
                   alt={nft.name}
-                  className="w-full h-48 object-cover"
+                  className="w-full h-48 object-cover rounded-xl"
                 />
                 <div className="p-4">
                   <h3 className="text-lg font-semibold">{nft.name}</h3>
-                  <div className="mt-2">
+                  <div className="mt-4">
                     <a
                       href={`https://explorer.solana.com/address/${mintAddress}?cluster=devnet`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800"
+                      className="text-black font-bold border border-white p-3 rounded-xl bg-white"
                     >
                       View on Solana Explorer
                     </a>
