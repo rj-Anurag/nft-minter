@@ -181,7 +181,7 @@ export default function NftMintingPlatform() {
               <span>{walletBalance.toFixed(4)} SOL</span>
             </div>
           )}
-          <WalletMultiButton className="!bg-purple-600 hover:!bg-purple-700" />
+          <WalletMultiButton className="bg-black hover:bg-white" />
         </div>
       </div>
 
