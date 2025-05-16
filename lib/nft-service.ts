@@ -1,32 +1,38 @@
-import type { Connection, PublicKey, TransactionSignature } from "@solana/web3.js"
-import { LAMPORTS_PER_SOL } from "@solana/web3.js"
-import { Metaplex, walletAdapterIdentity, mockStorage } from "@metaplex-foundation/js"
-import type { NftMetadata } from "@/types/nft"
-import type { WalletContextState } from "@solana/wallet-adapter-react"
-import type { CustomConnection } from "@/lib/custom-connection"
+import type { Connection, PublicKey, TransactionSignature } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { Metaplex, walletAdapterIdentity } from "@metaplex-foundation/js"; // Removed mockStorage
+import pinataSDK from "@pinata/sdk" // Import Pinata SDK
+import type { NftMetadata } from "@/types/nft";
+import type { WalletContextState } from "@solana/wallet-adapter-react";
+import type { CustomConnection } from "@/lib/custom-connection"; // Assuming CustomConnection is still needed for connection handling
 
-// Minimum SOL required for minting (with some buffer)
-const MIN_SOL_BALANCE_FOR_MINTING = 0.02 * LAMPORTS_PER_SOL // 0.02 SOL in lamports
+// Initialize Pinata with your API keys
+// Remember to replace with your actual API keys or use environment variables
+const pinata = new pinataSDK(process.env.NEXT_PUBLIC_PINATA_API_KEY, process.env.NEXT_PUBLIC_PINATA_SECRET_API_KEY);
+
+// Define the minimum SOL balance required for minting
+const MIN_SOL_BALANCE_FOR_MINTING = 0.1; // Replace with the desired value in SOL
+
 
 // Check if wallet has enough SOL for minting
 export async function hasEnoughSolForMinting(connection: CustomConnection, publicKey: PublicKey): Promise<boolean> {
   try {
-    const balance = await connection.getBalance(publicKey)
-    return balance >= MIN_SOL_BALANCE_FOR_MINTING
+    const balance = await connection.getBalance(publicKey);
+    return balance >= MIN_SOL_BALANCE_FOR_MINTING;
   } catch (error) {
-    console.error("Error checking balance:", error)
-    return false
+    console.error("Error checking balance:", error);
+    return false;
   }
 }
 
 // Get wallet balance in SOL
 export async function getWalletBalance(connection: CustomConnection, publicKey: PublicKey): Promise<number> {
   try {
-    const balance = await connection.getBalance(publicKey)
-    return balance / LAMPORTS_PER_SOL
+    const balance = await connection.getBalance(publicKey);
+    return balance / LAMPORTS_PER_SOL;
   } catch (error) {
-    console.error("Error getting balance:", error)
-    return 0
+    console.error("Error getting balance:", error);
+    return 0;
   }
 }
 
@@ -34,79 +40,77 @@ export async function getWalletBalance(connection: CustomConnection, publicKey: 
 async function confirmTransaction(connection: CustomConnection, signature: TransactionSignature): Promise<boolean> {
   try {
     // Use the custom method from our CustomConnection class
-    const result = await connection.confirmTransactionUsingPolling(signature, "confirmed")
-    return !result.value.err
+    const result = await connection.confirmTransactionUsingPolling(signature, "confirmed");
+    return !result.value.err;
   } catch (error) {
-    console.error("Error confirming transaction:", error)
-    throw error
+    console.error("Error confirming transaction:", error);
+    throw error;
   }
+}
+
+// Function to upload NFT image and metadata to the API route
+async function uploadNftData(metadata: NftMetadata): Promise<{ imageUri: string; metadataUri: string }> {
+  if (!metadata.image) {
+    throw new Error("Image file is missing.");
+  }
+
+  const formData = new FormData();
+  formData.append('image', metadata.image);
+
+  // Create metadata JSON structure for the API route
+  const metadataJson = {
+    name: metadata.name,
+    description: metadata.description,
+    // Image URI will be added by the API route after upload
+    attributes: metadata.attributes.map(attr => ({
+      trait_type: attr.trait_type,
+      value: attr.value
+    })),
+    properties: {
+      files: [
+        {
+          // URI will be added by the API route
+          type: metadata.image.type
+        }
+      ],
+      category: 'image',
+      creators: [
+        {
+          address: "", // Wallet address will be added by the API route or you can send it
+          share: 100
+        }
+      ]
+    }
+  };
+  formData.append('metadata', JSON.stringify(metadataJson));
+
+  const response = await fetch('/api/upload-to-ipfs', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed with status ${response.status}`);
+  }
+
+  return response.json();
 }
 
 // Create and mint an NFT
-export async function createNft(metadata: NftMetadata, connection: CustomConnection, wallet: WalletContextState) {
-  try {
-    if (!wallet.publicKey || !wallet.signTransaction || !wallet.signAllTransactions) {
-      throw new Error("Wallet is not connected or doesn't support signing")
-    }
+export async function createNft(metadata: any) {
+  const response = await fetch("/api/pinata", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(metadata),
+  });
 
-    // Check if wallet has enough SOL
-    const hasEnoughSol = await hasEnoughSolForMinting(connection, wallet.publicKey)
-    if (!hasEnoughSol) {
-      throw new Error("Insufficient SOL balance for minting. Please add more SOL to your wallet.")
-    }
-
-    // Initialize Metaplex with wallet adapter identity and mock storage
-    // Using mock storage for demonstration purposes to avoid Arweave/Bundlr issues
-    const metaplex = Metaplex.make(connection as unknown as Connection)
-      .use(walletAdapterIdentity(wallet))
-      .use(mockStorage())
-
-    // Convert the image file to a data URL for mock storage
-    const reader = new FileReader()
-    const imageDataUrl = await new Promise<string>((resolve) => {
-      reader.onload = () => resolve(reader.result as string)
-      reader.readAsDataURL(metadata.image!)
-    })
-    // Upload the image (using mock storage)
-    const imageUri = await metaplex.storage().upload({
-      buffer: Buffer.from(imageDataUrl.split(',')[1], 'base64'),
-      fileName: metadata.name,
-      displayName: metadata.name,
-      uniqueName: "",
-      contentType: null,
-      extension: null,
-      tags: []
-    })
-
-    // Create metadata JSON
-    const { uri } = await metaplex.nfts().uploadMetadata({
-      name: metadata.name,
-      description: metadata.description,
-      image: imageUri,
-      attributes: metadata.attributes.map(attr => ({
-        trait_type: attr.trait_type,
-        value: attr.value
-      })),
-    })
-
-    // Create the NFT with specific confirmation options to avoid subscriptions
-    const { nft, response } = await metaplex.nfts().create({
-      uri,
-      name: metadata.name,
-      sellerFeeBasisPoints: 500, // 5%
-    })
-
-    // If we have a transaction signature, confirm it manually using our custom method
-    if (response && response.signature) {
-      await confirmTransaction(connection, response.signature)
-    }
-
-    return nft
-  } catch (error) {
-    console.error("Error creating NFT:", error)
-    throw error
+  if (!response.ok) {
+    throw new Error("Failed to create NFT");
   }
+
+  return await response.json();
 }
+
 
 // Store recently minted NFTs in memory for demo purposes
 const recentlyMintedNfts: any[] = []
@@ -117,7 +121,9 @@ export function addMintedNft(nft: any, metadata: NftMetadata) {
   const nftWithMetadata = {
     mint: nft.mint.address ? nft.mint.address.toString() : nft.mint.toString(),
     name: metadata.name,
-    image: URL.createObjectURL(metadata.image!),
+    // Use the correct IPFS URI for the image from the uploaded metadata
+    // This assumes you store the image URI in the metadata when uploading
+    image: `https://gateway.pinata.cloud/ipfs/${(nft.metadataAccount as any)?.data.uri.split('ipfs://')[1]}`, // Construct gateway URL
     attributes: metadata.attributes,
   }
 
